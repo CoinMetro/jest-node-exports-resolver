@@ -134,15 +134,15 @@ module.exports = (request, options) => {
           const [exportKey, exportValue] = Object.entries(exports)
           .find(([k]) => {
             if (k === submoduleName) return true;
-            if (k.endsWith('*')) return submoduleName.startsWith(k.slice(0, -1))
+            if (/[/*]$/.test(k)) return submoduleName.startsWith(k.replace(/[/*]$/, ""))
 
             return false;
           }) || [];
 
           if (typeof exportValue === "string")
-            targetFilePath = exportKey.endsWith('*')
+            targetFilePath = /[/*]$/.test(exportKey)
               ? exportValue.replace(
-                /\*/, submoduleName.slice(exportKey.length - 1)
+                /[/*]$/, submoduleName.slice(exportKey.replace(/[/*]$/, "").length)
               )
               : exportValue;
 
