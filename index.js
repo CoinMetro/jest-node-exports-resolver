@@ -151,18 +151,22 @@ module.exports = (request, options) => {
           ){
             function resolveExport(exportValue, prevKeys)
             {
-              for(const [key, value] of Object.entries(exportValue))
+              for(const key of ["node", "require", "default"])
               {
+                const value = exportValue[key];
+
+                if (!value) continue;
+                
                 // Duplicated nested conditions are undefined behaviour (and
                 // probably a format error or spec loop-hole), abort and
                 // delegate to Jest default resolver
-                if(prevKeys.includes(key)) return
-
-                if (!conditions.includes(key)) continue
+                if(prevKeys.includes(key)) continue
 
                 if (typeof value === "string") return value
 
-                return resolveExport(value, prevKeys.concat(key));
+                const nestedValue = resolveExport(value, prevKeys.concat(key));
+
+                if (nestedValue) return nestedValue;
               }
             }
 
