@@ -1,6 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 
+const noOp = () => 0;
+const { log = noOp, warn= noOp, error= noOp } = process.env.VERBOSE_JEST_NODE_EXPORTS_RESOLVER ? console : {};
+
 function findMainPackageJson(entryPath, packageName) {
   entryPath = entryPath.replace(/\//g, path.sep);
 
@@ -45,7 +48,7 @@ function getPackageJson(packageName) {
     return require(`${packageName}/package.json`);
   } catch (requireError) {
     if (requireError.code !== "ERR_PACKAGE_PATH_NOT_EXPORTED") {
-      return console.error(
+      return error(
         `Unexpected error while requiring ${packageName}:`, requireError
       );
     }
@@ -60,11 +63,11 @@ function getPackageJson(packageName) {
     return requestPath && findMainPackageJson(requestPath, packageName);
   } catch (resolveError) {
     if (resolveError.code !== "ERR_PACKAGE_PATH_NOT_EXPORTED") {
-      console.log(
+      log(
         `Unexpected error while performing require.resolve(${packageName}):`
       );
 
-      return console.error(resolveError);
+      return error(resolveError);
     }
   }
 
@@ -75,7 +78,7 @@ function getPackageJson(packageName) {
     return JSON.parse(fs.readFileSync(suspect).toString());
   }
 
-  console.warn(
+  warn(
     'Could not retrieve package.json neither through require (package.json ' +
     'itself is not within "exports" field), nor through require.resolve ' +
     '(package.json does not specify "main" field) - falling back to default ' +
@@ -116,7 +119,7 @@ module.exports = (request, options) => {
       const packageJson = getPackageJson(packageName);
 
       if (!packageJson) {
-        console.error(`Failed to find package.json for ${packageName}`);
+        error(`Failed to find package.json for ${packageName}`);
       }
 
       const {exports} = packageJson || {};
