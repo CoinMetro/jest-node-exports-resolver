@@ -131,19 +131,17 @@ module.exports = (request, options) => {
           targetFilePath = exports;
 
         else if (Object.keys(exports).every((k) => k.startsWith("."))) {
+          const globRegex = /[/*](.js(on)?)?$/;
           const [exportKey, exportValue] = Object.entries(exports)
           .find(([k]) => {
             if (k === submoduleName) return true;
-            if (/[/*]$/.test(k)) return submoduleName.startsWith(k.replace(/[/*]$/, ""))
-
+            if (globRegex.test(k)) return submoduleName.startsWith(k.replace(globRegex, ""))
             return false;
           }) || [];
 
           if (typeof exportValue === "string")
-            targetFilePath = /[/*]$/.test(exportKey)
-              ? exportValue.replace(
-                /[/*]$/, submoduleName.slice(exportKey.replace(/[/*]$/, "").length)
-              )
+            targetFilePath = globRegex.test(exportKey)
+              ? exportValue.replace(globRegex, submoduleName.slice(exportKey.replace(globRegex, "").length))
               : exportValue;
 
           else if (
